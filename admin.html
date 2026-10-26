@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin – SPSF Attendance</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy: #0f2238; --navy-2: #17324f; --brass: #c9993a; --alert: #d8584a;
+  --bg: #f4f6f9; --card: #ffffff; --ink: #14202e; --muted: #5b6878; --line: #d7dee7; --focus: #1f5fbf;
+  --ok-bg: #e6f4ea; --ok-ink: #1b5e30; --bad-bg: #fdecea; --bad-ink: #8a1f14; --warn-bg: #fff4d6; --warn-ink: #6b4a00;
+  --font: "Barlow", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  --font-display: "Barlow Condensed", "Barlow", system-ui, Arial, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0b1520; --card: #12202f; --ink: #e8eef5; --muted: #9aa8b8; --line: #2b3d52; --focus: #6fa8ff;
+    --ok-bg: #14301f; --ok-ink: #9ad9b0; --bad-bg: #3a1a17; --bad-ink: #ffb4aa; --warn-bg: #3a2f10; --warn-ink: #f2d27a;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; font-family: var(--font); color: var(--ink); background: var(--bg); line-height: 1.45; -webkit-font-smoothing: antialiased; }
+[hidden] { display: none !important; }
+button, input, select { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+.top { background: var(--navy); color: #fff; display: flex; align-items: center; gap: 20px; padding: 0 24px; min-height: 60px; flex-wrap: wrap; }
+.brand { font-family: var(--font-display); font-size: 28px; font-weight: 700; letter-spacing: .03em; padding: 8px 0; }
+.brand small { font-family: var(--font); font-size: 13px; font-weight: 500; color: #b9c8d8; margin-left: 10px; letter-spacing: 0; }
+.tabs { display: flex; gap: 4px; flex: 1; }
+.tab { background: none; border: 0; color: #c5d1df; padding: 20px 14px 17px; font-weight: 600; cursor: pointer; border-bottom: 3px solid transparent; }
+.tab:hover { color: #fff; }
+.tab[aria-selected="true"] { color: #fff; border-bottom-color: var(--brass); }
+.who { font-size: 14px; color: #c5d1df; display: flex; align-items: center; gap: 12px; }
+.who button { background: transparent; border: 1.5px solid #5d7390; color: #fff; border-radius: 6px; padding: 6px 12px; cursor: pointer; font-weight: 600; }
+
+main { max-width: 1240px; margin: 0 auto; padding: 24px; }
+h2 { margin: 0 0 16px; font-size: 24px; }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 14px; margin: 0 0 22px; }
+.stat { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; }
+.stat .n { font-family: var(--font-display); font-size: 40px; font-weight: 700; line-height: 1; }
+.stat .l { font-size: 14px; color: var(--muted); margin-top: 6px; }
+.stat.flag { border-color: var(--alert); }
+.stat.flag .n { color: var(--alert); }
+
+.bar { display: flex; gap: 12px; flex-wrap: wrap; align-items: end; margin: 0 0 16px; }
+.bar label { display: grid; gap: 4px; font-size: 13px; font-weight: 600; color: var(--muted); }
+.bar input, .bar select, .form input, .form select, td input, td select {
+  height: 40px; padding: 0 10px; background: var(--card); border: 1.5px solid var(--line); border-radius: 8px; min-width: 130px;
+}
+.btn { height: 40px; padding: 0 16px; border-radius: 8px; border: 0; background: var(--navy-2); color: #fff; font-weight: 700; cursor: pointer; }
+.btn:hover { background: var(--navy); }
+.btn.ghost { background: transparent; color: var(--ink); border: 1.5px solid var(--line); }
+.btn.ghost:hover { background: var(--card); }
+.btn.danger { background: transparent; color: var(--bad-ink); border: 1.5px solid var(--bad-ink); height: 34px; padding: 0 12px; }
+.spacer { flex: 1; }
+
+.tablewrap { background: var(--card); border: 1px solid var(--line); border-radius: 10px; overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; min-width: 760px; }
+th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); font-size: 14px; white-space: nowrap; }
+th { font-size: 13px; color: var(--muted); font-weight: 600; background: color-mix(in srgb, var(--card) 92%, var(--ink)); }
+tr:last-child td { border-bottom: 0; }
+td.empty { text-align: center; color: var(--muted); padding: 36px; white-space: normal; }
+.chip { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 13px; font-weight: 600; }
+.chip.in { background: var(--ok-bg); color: var(--ok-ink); }
+.chip.out { background: var(--bad-bg); color: var(--bad-ink); }
+.chip.off { background: var(--warn-bg); color: var(--warn-ink); }
+a { color: var(--focus); }
+
+.form { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 16px; margin: 0 0 18px; display: flex; gap: 12px; flex-wrap: wrap; align-items: end; }
+.form label { display: grid; gap: 4px; font-size: 13px; font-weight: 600; color: var(--muted); }
+.note { font-size: 13px; color: var(--muted); margin: 10px 0 0; max-width: 90ch; }
+
+.notice { border-radius: 8px; padding: 12px 14px; margin: 0 0 18px; font-size: 14px; background: var(--warn-bg); color: var(--warn-ink); }
+.gate { max-width: 460px; margin: 12vh auto; padding: 24px; text-align: center; }
+.gate h1 { font-size: 26px; margin: 0 0 8px; }
+.toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--navy); color: #fff; padding: 10px 18px; border-radius: 8px; font-size: 14px; z-index: 5; }
+
+@media (max-width: 720px) {
+  .top { padding: 0 14px; }
+  .tab { padding: 14px 10px 11px; }
+  main { padding: 16px 14px; }
+}
+</style>
+</head>
+<body>
+
+<div id="gate" class="gate">
+  <h1 id="gateTitle">Checking access…</h1>
+  <p id="gateText" style="color:var(--muted)"></p>
+  <button class="btn" id="gateBtn" hidden></button>
+</div>
+
+<div id="app" hidden>
+  <header class="top">
+    <div class="brand">SPSF<small>Admin</small></div>
+    <nav class="tabs" role="tablist">
+      <button class="tab" role="tab" data-tab="attendance" aria-selected="true">Attendance</button>
+      <button class="tab" role="tab" data-tab="sites" aria-selected="false">Sites</button>
+      <button class="tab" role="tab" data-tab="people" aria-selected="false">Employees</button>
+    </nav>
+    <div class="who"><span id="whoEmail"></span><button id="signOut" type="button">Sign out</button></div>
+  </header>
+
+  <main>
+    <!-- Attendance -->
+    <section id="tab-attendance" role="tabpanel">
+      <h2>Attendance</h2>
+      <div class="cards">
+        <div class="stat"><div class="n" id="sTotal">0</div><div class="l">Punches in range</div></div>
+        <div class="stat"><div class="n" id="sIn">0</div><div class="l">Inside site boundary</div></div>
+        <div class="stat flag"><div class="n" id="sOut">0</div><div class="l">Outside boundary (flagged)</div></div>
+        <div class="stat"><div class="n" id="sPeople">0</div><div class="l">Employees who punched</div></div>
+        <div class="stat"><div class="n" id="sActive">0</div><div class="l">Active employees</div></div>
+      </div>
+      <div class="bar">
+        <label>From <input type="date" id="fFrom"></label>
+        <label>To <input type="date" id="fTo"></label>
+        <label>Site <select id="fSite"><option value="">All sites</option></select></label>
+        <label>Result <select id="fStatus"><option value="">All</option><option value="INSIDE">Inside</option><option value="OUTSIDE">Outside (flagged)</option></select></label>
+        <label>Search <input type="search" id="fSearch" placeholder="Name or Employee ID"></label>
+        <span class="spacer"></span>
+        <button class="btn ghost" id="csvBtn" type="button">Download CSV</button>
+      </div>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Time</th><th>Employee</th><th>ID</th><th>Site</th><th>Punch</th><th>Result</th><th>Distance from site</th><th>Location</th><th>Photo</th></tr></thead>
+          <tbody id="attBody"></tbody>
+        </table>
+      </div>
+      <p class="note">Shows up to 1,000 of the newest punches in the selected dates. Narrow the dates if you hit the limit.</p>
+    </section>
+
+    <!-- Sites -->
+    <section id="tab-sites" role="tabpanel" hidden>
+      <h2>Sites and boundaries</h2>
+      <form class="form" id="siteForm">
+        <label>Site name <input id="siteName" required placeholder="Unit B – Guntur"></label>
+        <label>Latitude <input id="siteLat" required inputmode="decimal" placeholder="16.306700"></label>
+        <label>Longitude <input id="siteLng" required inputmode="decimal" placeholder="80.436500"></label>
+        <label>Radius (metres) <input id="siteRad" required inputmode="numeric" value="100"></label>
+        <button type="button" class="btn ghost" id="siteHere">Use my current location</button>
+        <button class="btn" type="submit" id="siteSave">Add site</button>
+      </form>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Site</th><th>Latitude</th><th>Longitude</th><th>Radius (m)</th><th>Status</th><th></th></tr></thead>
+          <tbody id="siteBody"></tbody>
+        </table>
+      </div>
+      <p class="note">Stand at the gate or post and use “Use my current location” for the most accurate boundary centre. A punch farther than the radius from its site is flagged Outside. Turning a site off hides it from new punches without deleting its history.</p>
+    </section>
+
+    <!-- Employees -->
+    <section id="tab-people" role="tabpanel" hidden>
+      <h2>Employees</h2>
+      <form class="form" id="personForm">
+        <label>Auth UID <input id="pUid" required placeholder="From Firebase Authentication"></label>
+        <label>Employee ID <input id="pEid" required placeholder="SPSF-01-2026-01"></label>
+        <label>Name <input id="pName" required></label>
+        <label>Site <select id="pSite"></select></label>
+        <button class="btn" type="submit">Save employee</button>
+      </form>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Employee ID</th><th>Name</th><th>Site</th><th>Role</th><th>Status</th></tr></thead>
+          <tbody id="peopleBody"></tbody>
+        </table>
+      </div>
+      <p class="note">Create the login itself in Firebase Authentication (or your server), then add the employee here with the same UID. Making an account inactive blocks sign-in on the login page. Admin rights come from the admin claim, not from this table.</p>
+    </section>
+  </main>
+</div>
+<div id="toast" class="toast" role="status" hidden></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+/* ============ CONFIG – same values as login.html ============ */
+const CONFIG = {
+  firebase: {
+    apiKey: "YOUR_WEB_API_KEY",
+    authDomain: "spsf-workforce.firebaseapp.com",
+    projectId: "spsf-workforce",
+    appId: "YOUR_WEB_APP_ID"
+  },
+  adminEmails: ["spsf.hr@gmail.com"],   // page-level convenience only; real protection is the admin claim + Firestore rules
+  loginUrl: "login.html",
+  collections: { users: "users", sites: "sites", attendance: "attendance" },
+  maxRows: 1000
+};
+/* ============================================================ */
+
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+  function gate(title, text, btnText, btnFn) {
+    $('app').hidden = true; $('gate').hidden = false;
+    $('gateTitle').textContent = title; $('gateText').textContent = text || '';
+    const b = $('gateBtn');
+    if (btnText) { b.hidden = false; b.textContent = btnText; b.onclick = btnFn; } else { b.hidden = true; }
+  }
+
+  if (String(CONFIG.firebase.apiKey).startsWith('YOUR_') || String(CONFIG.firebase.appId).startsWith('YOUR_')) {
+    return gate('Setup needed', 'Paste your Firebase web app keys into CONFIG.firebase at the top of the script in this file (same values as login.html).');
+  }
+  if (typeof firebase === 'undefined') {
+    return gate('Could not load', 'The Firebase service did not load. Check your connection and reload.', 'Reload', () => location.reload());
+  }
+
+  firebase.initializeApp(CONFIG.firebase);
+  const auth = firebase.auth(), db = firebase.firestore();
+  const C = CONFIG.collections;
+  let sites = [], users = [], rows = [], unsubAtt = null, unsubSites = null, unsubUsers = null;
+
+  function toast(t) {
+    const el = $('toast'); el.textContent = t; el.hidden = false;
+    clearTimeout(toast._t); toast._t = setTimeout(() => { el.hidden = true; }, 2600);
+  }
+  function fail(e) { console.error(e); toast(e && e.code === 'permission-denied' ? 'Not allowed. Check Firestore rules and admin claim.' : 'Something went wrong. Try again.'); }
+
+  /* ---------- access guard ---------- */
+  auth.onAuthStateChanged(async (user) => {
+    if (!user) { location.href = CONFIG.loginUrl; return; }
+    let isAdmin = false;
+    try {
+      const t = await user.getIdTokenResult(true);
+      isAdmin = t.claims.admin === true || CONFIG.adminEmails.map((e) => e.toLowerCase()).includes((user.email || '').toLowerCase());
+    } catch (e) { /* treated as not admin */ }
+    if (!isAdmin) {
+      return gate('No admin access', 'This account is not an administrator.', 'Sign out', async () => { await auth.signOut(); location.href = CONFIG.loginUrl; });
+    }
+    $('whoEmail').textContent = user.email || '';
+    $('gate').hidden = true; $('app').hidden = false;
+    start();
+  });
+  $('signOut').onclick = async () => { await auth.signOut(); location.href = CONFIG.loginUrl; };
+
+  /* ---------- tabs ---------- */
+  document.querySelectorAll('.tab').forEach((b) => b.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach((x) => x.setAttribute('aria-selected', String(x === b)));
+    ['attendance', 'sites', 'people'].forEach((n) => { $('tab-' + n).hidden = n !== b.dataset.tab; });
+  }));
+
+  /* ---------- data ---------- */
+  function ymd(d) { const p = (n) => String(n).padStart(2, '0'); return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()); }
+  function start() {
+    $('fFrom').value = $('fTo').value = ymd(new Date());
+    ['fFrom', 'fTo'].forEach((id) => $(id).addEventListener('change', listenAttendance));
+    ['fSite', 'fStatus'].forEach((id) => $(id).addEventListener('change', renderAttendance));
+    $('fSearch').addEventListener('input', renderAttendance);
+
+    unsubSites = db.collection(C.sites).orderBy('name').onSnapshot((s) => {
+      sites = s.docs.map((d) => ({ id: d.id, ...d.data() }));
+      renderSites(); fillSiteSelects(); renderAttendance();
+    }, fail);
+    unsubUsers = db.collection(C.users).onSnapshot((s) => {
+      users = s.docs.map((d) => ({ id: d.id, ...d.data() }))
+        .sort((a, b) => String(a.employeeId || '').localeCompare(String(b.employeeId || '')));
+      renderPeople(); renderAttendance();
+    }, fail);
+    listenAttendance();
+  }
+
+  function listenAttendance() {
+    if (unsubAtt) unsubAtt();
+    const f = $('fFrom').value, t = $('fTo').value;
+    if (!f || !t) return;
+    const from = new Date(f + 'T00:00:00'), to = new Date(t + 'T23:59:59.999');
+    unsubAtt = db.collection(C.attendance)
+      .where('ts', '>=', firebase.firestore.Timestamp.fromDate(from))
+      .where('ts', '<=', firebase.firestore.Timestamp.fromDate(to))
+      .orderBy('ts', 'desc').limit(CONFIG.maxRows)
+      .onSnapshot((s) => { rows = s.docs.map((d) => ({ id: d.id, ...d.data() })); renderAttendance(); }, fail);
+  }
+
+  function siteName(id) { const s = sites.find((x) => x.id === id); return s ? s.name : (id || '—'); }
+  function fillSiteSelects() {
+    const cur = $('fSite').value;
+    $('fSite').innerHTML = '<option value="">All sites</option>' + sites.map((s) => `<option value="${esc(s.id)}">${esc(s.name)}</option>`).join('');
+    $('fSite').value = cur;
+    $('pSite').innerHTML = '<option value="">Not assigned</option>' + sites.filter((s) => s.active !== false).map((s) => `<option value="${esc(s.id)}">${esc(s.name)}</option>`).join('');
+  }
+
+  /* ---------- attendance ---------- */
+  function visibleRows() {
+    const site = $('fSite').value, st = $('fStatus').value, q = $('fSearch').value.trim().toLowerCase();
+    return rows.filter((r) =>
+      (!site || r.siteId === site) && (!st || r.status === st) &&
+      (!q || String(r.name || '').toLowerCase().includes(q) || String(r.employeeId || '').toLowerCase().includes(q)));
+  }
+  function fmtTime(ts) {
+    if (!ts || !ts.toDate) return '—';
+    return ts.toDate().toLocaleString([], { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+  }
+  function renderAttendance() {
+    const v = visibleRows();
+    $('sTotal').textContent = v.length;
+    $('sIn').textContent = v.filter((r) => r.status === 'INSIDE').length;
+    $('sOut').textContent = v.filter((r) => r.status === 'OUTSIDE').length;
+    $('sPeople').textContent = new Set(v.map((r) => r.employeeId || r.uid)).size;
+    $('sActive').textContent = users.filter((u) => u.active !== false).length;
+    $('attBody').innerHTML = v.length ? v.map((r) => {
+      const out = r.status === 'OUTSIDE';
+      const map = (r.lat != null && r.lng != null) ? `<a href="https://www.google.com/maps?q=${encodeURIComponent(r.lat + ',' + r.lng)}" target="_blank" rel="noopener">Map</a>` : '—';
+      const photo = /^https:\/\//.test(r.photoUrl || '') ? `<a href="${esc(r.photoUrl)}" target="_blank" rel="noopener">Photo</a>` : '—';
+      return `<tr><td>${esc(fmtTime(r.ts))}</td><td>${esc(r.name || '—')}</td><td>${esc(r.employeeId || '—')}</td><td>${esc(siteName(r.siteId))}</td>` +
+        `<td>${esc(r.type === 'out' ? 'Punch out' : 'Punch in')}</td><td><span class="chip ${out ? 'out' : 'in'}">${out ? 'Outside' : 'Inside'}</span></td>` +
+        `<td>${r.distanceM != null ? esc(Math.round(r.distanceM)) + ' m' : '—'}</td><td>${map}</td><td>${photo}</td></tr>`;
+    }).join('') : '<tr><td class="empty" colspan="9">No punches match these filters.</td></tr>';
+  }
+
+  $('csvBtn').onclick = () => {
+    const v = visibleRows();
+    if (!v.length) { toast('Nothing to download.'); return; }
+    const head = ['Time', 'Name', 'Employee ID', 'Site', 'Punch', 'Result', 'Distance m', 'Latitude', 'Longitude', 'Accuracy m'];
+    const safe = (x) => { let s = String(x == null ? '' : x); if (/^[=+\-@]/.test(s)) s = "'" + s; return '"' + s.replace(/"/g, '""') + '"'; };
+    const lines = [head.map(safe).join(',')].concat(v.map((r) => [
+      r.ts && r.ts.toDate ? r.ts.toDate().toISOString() : '', r.name, r.employeeId, siteName(r.siteId),
+      r.type === 'out' ? 'Punch out' : 'Punch in', r.status, r.distanceM != null ? Math.round(r.distanceM) : '', r.lat, r.lng, r.accuracy
+    ].map(safe).join(',')));
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([lines.join('\n')], { type: 'text/csv' }));
+    a.download = 'spsf-attendance-' + $('fFrom').value + '_to_' + $('fTo').value + '.csv';
+    a.click(); URL.revokeObjectURL(a.href);
+  };
+
+  /* ---------- sites ---------- */
+  $('siteHere').onclick = () => {
+    if (!navigator.geolocation) { toast('This device cannot share its location.'); return; }
+    navigator.geolocation.getCurrentPosition((p) => {
+      $('siteLat').value = p.coords.latitude.toFixed(6); $('siteLng').value = p.coords.longitude.toFixed(6);
+      toast('Location filled in (accuracy about ' + Math.round(p.coords.accuracy) + ' m).');
+    }, () => toast('Could not get location. Allow location access and try again.'), { enableHighAccuracy: true, timeout: 15000 });
+  };
+  $('siteForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const lat = parseFloat($('siteLat').value), lng = parseFloat($('siteLng').value), rad = parseInt($('siteRad').value, 10);
+    if (!(lat >= -90 && lat <= 90) || !(lng >= -180 && lng <= 180)) { toast('Enter valid latitude and longitude.'); return; }
+    if (!(rad >= 10 && rad <= 5000)) { toast('Radius must be between 10 and 5000 metres.'); return; }
+    try {
+      await db.collection(C.sites).add({ name: $('siteName').value.trim(), lat, lng, radiusM: rad, active: true });
+      e.target.reset(); $('siteRad').value = '100'; toast('Site added.');
+    } catch (err) { fail(err); }
+  });
+  function renderSites() {
+    $('siteBody').innerHTML = sites.length ? sites.map((s) =>
+      `<tr><td>${esc(s.name)}</td><td>${esc(s.lat)}</td><td>${esc(s.lng)}</td>` +
+      `<td><input type="number" min="10" max="5000" value="${esc(s.radiusM)}" data-rad="${esc(s.id)}" style="min-width:90px;width:100px" aria-label="Radius for ${esc(s.name)}"></td>` +
+      `<td><span class="chip ${s.active === false ? 'off' : 'in'}">${s.active === false ? 'Off' : 'Active'}</span></td>` +
+      `<td><button class="btn ghost" style="height:34px" data-toggle="${esc(s.id)}">${s.active === false ? 'Turn on' : 'Turn off'}</button></td></tr>`
+    ).join('') : '<tr><td class="empty" colspan="6">No sites yet. Add the first one above.</td></tr>';
+  }
+  $('siteBody').addEventListener('change', async (e) => {
+    const id = e.target.dataset.rad; if (!id) return;
+    const v = parseInt(e.target.value, 10);
+    if (!(v >= 10 && v <= 5000)) { toast('Radius must be between 10 and 5000 metres.'); renderSites(); return; }
+    try { await db.collection(C.sites).doc(id).update({ radiusM: v }); toast('Radius updated.'); } catch (err) { fail(err); }
+  });
+  $('siteBody').addEventListener('click', async (e) => {
+    const id = e.target.dataset.toggle; if (!id) return;
+    const s = sites.find((x) => x.id === id);
+    try { await db.collection(C.sites).doc(id).update({ active: s.active === false }); } catch (err) { fail(err); }
+  });
+
+  /* ---------- employees ---------- */
+  $('personForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const uid = $('pUid').value.trim();
+    if (!/^[A-Za-z0-9]{20,40}$/.test(uid)) { toast('That does not look like a Firebase UID.'); return; }
+    try {
+      await db.collection(C.users).doc(uid).set({
+        employeeId: $('pEid').value.trim().toUpperCase(), name: $('pName').value.trim(), siteId: $('pSite').value || null, role: 'employee', active: true
+      }, { merge: true });
+      e.target.reset(); toast('Employee saved.');
+    } catch (err) { fail(err); }
+  });
+  function renderPeople() {
+    $('peopleBody').innerHTML = users.length ? users.map((u) =>
+      `<tr><td>${esc(u.employeeId || '—')}</td><td>${esc(u.name || '—')}</td>` +
+      `<td><select data-site="${esc(u.id)}" aria-label="Site for ${esc(u.name || u.employeeId)}"><option value="">Not assigned</option>` +
+      sites.map((s) => `<option value="${esc(s.id)}"${u.siteId === s.id ? ' selected' : ''}>${esc(s.name)}</option>`).join('') + `</select></td>` +
+      `<td>${esc(u.role === 'admin' ? 'Admin' : 'Employee')}</td>` +
+      `<td><button class="btn ghost" style="height:34px" data-active="${esc(u.id)}">${u.active === false ? 'Inactive – turn on' : 'Active – turn off'}</button></td></tr>`
+    ).join('') : '<tr><td class="empty" colspan="5">No employees yet. Add one above.</td></tr>';
+  }
+  $('peopleBody').addEventListener('change', async (e) => {
+    const id = e.target.dataset.site; if (!id) return;
+    try { await db.collection(C.users).doc(id).update({ siteId: e.target.value || null }); toast('Site updated.'); } catch (err) { fail(err); }
+  });
+  $('peopleBody').addEventListener('click', async (e) => {
+    const id = e.target.dataset.active; if (!id) return;
+    const u = users.find((x) => x.id === id);
+    try { await db.collection(C.users).doc(id).update({ active: u.active === false }); } catch (err) { fail(err); }
+  });
+})();
+</script>
+</body>
+</html>
